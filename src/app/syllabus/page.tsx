@@ -96,10 +96,38 @@ const STARTER_MBBS_TOPICS: SyllabusItem[] = [
 
 export default function SyllabusManagementPage() {
   const [topics, setTopics] = React.useState<SyllabusItem[]>(STARTER_MBBS_TOPICS);
+  const [isLoaded, setIsLoaded] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedSubject, setSelectedSubject] = React.useState<string>("all");
   const [selectedStatus, setSelectedStatus] = React.useState<string>("all");
   const [showOnlyUnprepared, setShowOnlyUnprepared] = React.useState(false);
+
+  // Load saved topics from localStorage or Supabase
+  React.useEffect(() => {
+    try {
+      const saved = localStorage.getItem("medprep_syllabus_topics");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setTopics(parsed);
+        }
+      }
+    } catch (e) {
+      console.warn("Could not load stored topics:", e);
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  // Save to persistent storage whenever topics change
+  React.useEffect(() => {
+    if (!isLoaded) return;
+    try {
+      localStorage.setItem("medprep_syllabus_topics", JSON.stringify(topics));
+    } catch (e) {
+      console.warn("Could not persist topics:", e);
+    }
+  }, [topics, isLoaded]);
 
   // Manual topic addition modal
   const [isAddModalOpen, setIsAddModalOpen] = React.useState(false);
