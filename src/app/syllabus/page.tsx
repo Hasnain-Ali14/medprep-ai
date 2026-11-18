@@ -11,6 +11,7 @@ import {
   Clock,
   Circle,
   Trash2,
+  Edit2,
   AlertTriangle,
   X,
   Loader2,
@@ -145,6 +146,11 @@ export default function SyllabusManagementPage() {
   const [rawExtractedText, setRawExtractedText] = React.useState<string>("");
   const [activeModalTab, setActiveModalTab] = React.useState<"topics" | "raw">("topics");
 
+  // Paste Text modal state
+  const [isPasteModalOpen, setIsPasteModalOpen] = React.useState(false);
+  const [pastedSyllabusText, setPastedSyllabusText] = React.useState("");
+  const [pasteDefaultSubject, setPasteDefaultSubject] = React.useState(DEFAULT_SUBJECTS[0]);
+
   // Status toggle handler
   const handleToggleStatus = (topicId: string) => {
     setTopics((prev) =>
@@ -253,6 +259,66 @@ export default function SyllabusManagementPage() {
     setScannedWarning(null);
   };
 
+  // Process pasted text
+  const handleProcessPastedText = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pastedSyllabusText.trim()) return;
+
+    const lines = pastedSyllabusText
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+
+    const newItems: SyllabusItem[] = [];
+    let activeSubject = pasteDefaultSubject;
+    let activeChapter = "General Topics";
+
+    for (const line of lines) {
+      // Check if line indicates a subject
+      const subjectMatch = DEFAULT_SUBJECTS.find((s) =>
+        new RegExp(`^(subject\\s*[:\\-]?\\s*)?${s}`, "i").test(line)
+      );
+
+      if (subjectMatch) {
+        activeSubject = subjectMatch;
+        activeChapter = "General Topics";
+        continue;
+      }
+
+      // Check if line indicates chapter
+      const chapterMatch = line.match(/^(chapter|unit|section|module|system)\s*(\d+|[ivx]+)?\s*[:.\-]?\s*(.+)/i);
+      if (chapterMatch) {
+        activeChapter = (chapterMatch[3] || line).substring(0, 80).trim();
+        continue;
+      }
+
+      // Topic line
+      const cleanName = line.replace(/^(\d+[\.\)]|\-|\*|•|[a-z][\.\)])\s*/i, "").trim();
+      if (cleanName.length > 3) {
+        const isCritical = /emergency|shock|acute|infarction|carcinoma|trauma|failure|sepsis/i.test(cleanName);
+        const isHigh = /management|diagnosis|treatment|protocol|syndrome|infection/i.test(cleanName);
+
+        newItems.push({
+          id: `pasted-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+          name: cleanName,
+          subjectName: activeSubject,
+          chapterName: activeChapter,
+          status: "not_started",
+          priority: isCritical ? "critical" : isHigh ? "high" : "medium",
+          estimatedMinutes: 60,
+        });
+      }
+    }
+
+    if (newItems.length > 0) {
+      setTopics((prev) => [...newItems, ...prev]);
+      setIsPasteModalOpen(false);
+      setPastedSyllabusText("");
+    } else {
+      alert("No topics could be parsed from the text. Please ensure each topic is on a new line.");
+    }
+  };
+
   // Filter topics
   const filteredTopics = topics.filter((t) => {
     const matchesSearch =
@@ -299,11 +365,20 @@ export default function SyllabusManagementPage() {
             </label>
 
             <Button
+              onClick={() => setIsPasteModalOpen(true)}
+              variant="outline"
+              className="text-xs h-9 px-3 border-slate-200"
+            >
+              <Edit2 className="mr-1.5 h-3.5 w-3.5 text-[#0d9488]" />
+              Paste Syllabus Text
+            </Button>
+
+            <Button
               onClick={() => setIsAddModalOpen(true)}
               className="bg-[#0f2744] hover:bg-[#183a63] text-white text-xs h-9 px-3"
             >
               <Plus className="mr-1.5 h-3.5 w-3.5" />
-              Add Topic
+              Add Single Topic
             </Button>
           </div>
         }
@@ -465,6 +540,75 @@ export default function SyllabusManagementPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Paste Copied Syllabus Modal */}
+      {isPasteModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-paste-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+        >
+          <div className="w-full max-w-xl rounded-xl bg-white p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 id="modal-paste-title" className="text-base font-semibold text-slate-900">
+                  Paste Copied Syllabus Text
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Paste copied topics directly. Place each topic on a new line or copy an entire outline.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsPasteModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleProcessPastedText} className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-slate-700">Assign to Subject</label>
+                <select
+                  value={pasteDefaultSubject}
+                  onChange={(e) => setPasteDefaultSubject(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-200 p-2 text-xs text-slate-900 focus:border-[#0d9488] focus:outline-none"
+                >
+                  {DEFAULT_SUBJECTS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-slate-700">
+                  Paste Syllabus Lines / Topics
+                </label>
+                <textarea
+                  required
+                  rows={10}
+                  value={pastedSyllabusText}
+                  onChange={(e) => setPastedSyllabusText(e.target.value)}
+                  placeholder={`Example:\nAcute Appendicitis\nIntestinal Obstruction\nPeritonitis and Abdominal Sepsis\nInguinal Hernia Management\nBreast Carcinoma Staging`}
+                  className="mt-1 w-full rounded-lg border border-slate-200 p-3 font-mono text-xs text-slate-900 focus:border-[#0d9488] focus:outline-none leading-relaxed"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <Button variant="outline" onClick={() => setIsPasteModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-[#0d9488] hover:bg-[#0f766e] text-white">
+                  Add All Topics
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Manual Topic Add Modal */}
       {isAddModalOpen && (
