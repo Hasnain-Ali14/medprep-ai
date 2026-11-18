@@ -6,6 +6,7 @@ import {
   BarChart3,
   Timer,
   Settings,
+  Sparkles,
 } from "lucide-react";
 
 export interface NavItem {
@@ -21,6 +22,12 @@ export const SIDEBAR_NAV_ITEMS: NavItem[] = [
     href: "/",
     icon: LayoutDashboard,
     shortDescription: "Overview & daily targets",
+  },
+  {
+    label: "AI Question Generator",
+    href: "/generator",
+    icon: Sparkles,
+    shortDescription: "Generate USMLE, UHS, & FCPS MCQs",
   },
   {
     label: "My Syllabus",
