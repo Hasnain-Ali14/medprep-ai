@@ -62,7 +62,16 @@ npm run lint    # Check code quality rules
 - **Milestone 3 (Complete):** Syllabus hierarchy management, manual topic creation, live search/filtering, "Show Only Unprepared Topics" toggle, and server-side PDF extraction with scanned-PDF detection and Review modal.
 - **Milestone 4 (Complete):** Examination Countdown (`/exams`) with multiple exam support, intelligent study scheduler (`scheduler.ts`) respecting daily hours and prioritizing critical topics, daily timetable planner with task completion, task locking, and dynamic rescheduling.
 - **Milestone 5 (Complete):** Progress Analytics (`/analytics`) with 3 distinct measurement pillars (Syllabus Mastery %, Scheduled Task %, Logged Study Hours) and Recharts data visualizations (Subject-Wise BarChart & Consistency LineChart).
-- **Milestone 6 (In Progress):** End-to-end browser verification passed with 0 errors across all routes; ready for live Supabase credentials and Vercel deployment.
+- **Milestone 6 (Complete):** Live deployment to Vercel completed and verified on production with 0 errors.
+
+---
+
+## Live Links & Repositories
+
+- **Live Production URL:** [https://medprep-ai-alpha.vercel.app](https://medprep-ai-alpha.vercel.app)
+- **GitHub Repository:** [https://github.com/Hasnain-Ali14/medprep-ai](https://github.com/Hasnain-Ali14/medprep-ai)
+- **Supabase Project:** `aqlskaulgwvxuavzhpzg` (`medprep-ai`)
+- **Vercel Project:** `hasni4/medprep-ai`
 
 ---
 
