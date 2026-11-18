@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       numPages: totalPages,
+      fullExtractedText: fullText,
       ...extractionResult,
     });
   } catch (error: unknown) {

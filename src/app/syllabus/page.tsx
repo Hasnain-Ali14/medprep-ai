@@ -142,6 +142,8 @@ export default function SyllabusManagementPage() {
   const [pdfUploading, setPdfUploading] = React.useState(false);
   const [extractedReviewTopics, setExtractedReviewTopics] = React.useState<ExtractedTopicItem[]>([]);
   const [scannedWarning, setScannedWarning] = React.useState<string | null>(null);
+  const [rawExtractedText, setRawExtractedText] = React.useState<string>("");
+  const [activeModalTab, setActiveModalTab] = React.useState<"topics" | "raw">("topics");
 
   // Status toggle handler
   const handleToggleStatus = (topicId: string) => {
@@ -223,6 +225,8 @@ export default function SyllabusManagementPage() {
       }
 
       setExtractedReviewTopics(data.topics || []);
+      setRawExtractedText(data.fullExtractedText || data.rawTextPreview || "");
+      setActiveModalTab("topics");
       setIsPdfModalOpen(true);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Error extracting PDF");
@@ -574,14 +578,14 @@ export default function SyllabusManagementPage() {
           aria-labelledby="modal-review-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
         >
-          <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl bg-white p-6 shadow-xl">
+          <div className="flex max-h-[88vh] w-full max-w-2xl flex-col rounded-xl bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 id="modal-review-title" className="text-base font-semibold text-slate-900">
-                  Review Extracted Syllabus Topics ({extractedReviewTopics.length})
+                  Extracted Syllabus Review
                 </h3>
                 <p className="text-xs text-slate-500">
-                  Review extracted topics before approving them into your active syllabus.
+                  Review extracted topics or inspect and edit the full raw extracted text.
                 </p>
               </div>
               <button
@@ -592,6 +596,32 @@ export default function SyllabusManagementPage() {
               </button>
             </div>
 
+            {/* Modal Tabs: Topics List vs Editable Raw Text */}
+            <div className="mt-3 flex rounded-lg bg-slate-100 p-1">
+              <button
+                type="button"
+                onClick={() => setActiveModalTab("topics")}
+                className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-colors ${
+                  activeModalTab === "topics"
+                    ? "bg-white text-slate-900 shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Parsed Topics ({extractedReviewTopics.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModalTab("raw")}
+                className={`flex-1 rounded-md py-1.5 text-xs font-medium transition-colors ${
+                  activeModalTab === "raw"
+                    ? "bg-white text-slate-900 shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Editable Raw Extracted Text
+              </button>
+            </div>
+
             {scannedWarning && (
               <div className="my-3 flex items-start gap-2.5 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
                 <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
@@ -599,45 +629,63 @@ export default function SyllabusManagementPage() {
               </div>
             )}
 
-            <div className="my-3 flex-1 overflow-y-auto divide-y divide-slate-100 pr-2">
-              {extractedReviewTopics.length === 0 ? (
-                <div className="py-8 text-center text-xs text-slate-500">
-                  No topics were automatically parsed. You can manually enter topics using the Add Topic button.
-                </div>
-              ) : (
-                extractedReviewTopics.map((topic, idx) => (
-                  <div key={topic.id} className="py-2.5 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <input
-                        type="text"
-                        value={topic.name}
-                        onChange={(e) => {
-                          const updated = [...extractedReviewTopics];
-                          updated[idx].name = e.target.value;
-                          setExtractedReviewTopics(updated);
-                        }}
-                        className="w-full text-xs font-medium text-slate-900 border-b border-transparent hover:border-slate-200 focus:border-[#0d9488] focus:outline-none"
-                      />
-                      <div className="flex gap-2 text-[11px] text-slate-500 mt-0.5">
-                        <span>{topic.subjectName}</span>
-                        <span>•</span>
-                        <span>{topic.chapterName}</span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setExtractedReviewTopics((prev) => prev.filter((_, i) => i !== idx));
-                      }}
-                      className="text-slate-400 hover:text-red-600"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+            {activeModalTab === "topics" ? (
+              <div className="my-3 flex-1 overflow-y-auto divide-y divide-slate-100 pr-2">
+                {extractedReviewTopics.length === 0 ? (
+                  <div className="py-8 text-center text-xs text-slate-500">
+                    No topics were automatically parsed. You can switch to the Editable Raw Text tab to copy lines or use Add Topic.
                   </div>
-                ))
-              )}
-            </div>
+                ) : (
+                  extractedReviewTopics.map((topic, idx) => (
+                    <div key={topic.id} className="py-2.5 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <input
+                          type="text"
+                          value={topic.name}
+                          onChange={(e) => {
+                            const updated = [...extractedReviewTopics];
+                            updated[idx].name = e.target.value;
+                            setExtractedReviewTopics(updated);
+                          }}
+                          className="w-full text-xs font-medium text-slate-900 border-b border-transparent hover:border-slate-200 focus:border-[#0d9488] focus:outline-none"
+                        />
+                        <div className="flex gap-2 text-[11px] text-slate-500 mt-0.5">
+                          <span className="font-medium text-[#0f2744]">{topic.subjectName}</span>
+                          <span>•</span>
+                          <span>{topic.chapterName}</span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setExtractedReviewTopics((prev) => prev.filter((_, i) => i !== idx));
+                        }}
+                        className="text-slate-400 hover:text-red-600"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="my-3 flex-1 flex flex-col space-y-2">
+                <label className="text-xs font-medium text-slate-700">
+                  Full Raw Text Extracted from PDF (Editable):
+                </label>
+                <textarea
+                  value={rawExtractedText}
+                  onChange={(e) => setRawExtractedText(e.target.value)}
+                  placeholder="Raw extracted text from your PDF..."
+                  rows={12}
+                  className="w-full flex-1 rounded-lg border border-slate-200 bg-slate-50/50 p-3 font-mono text-xs text-slate-800 leading-relaxed focus:border-[#0d9488] focus:bg-white focus:outline-none"
+                />
+                <p className="text-[11px] text-slate-500">
+                  Tip: You can edit this text directly or copy sections as needed.
+                </p>
+              </div>
+            )}
 
             <div className="flex justify-between items-center pt-3 border-t border-slate-100">
               <span className="text-xs text-slate-500">
