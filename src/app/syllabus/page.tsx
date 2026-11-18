@@ -174,7 +174,18 @@ export default function SyllabusManagementPage() {
         body: formData,
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error(
+          res.status === 413
+            ? "PDF file is too large to upload directly. Please upload a smaller section or compress the PDF."
+            : `Server returned non-JSON response (${res.status}): ${text.substring(0, 120)}`
+        );
+      }
+
       if (!res.ok) throw new Error(data.error || "Upload failed");
 
       if (data.isScannedOrImage) {
