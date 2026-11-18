@@ -13,27 +13,17 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Dynamic import to prevent client bundling
-    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-
-    const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer) });
-    const pdfDocument = await loadingTask.promise;
-
-    let fullText = "";
-    for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
-      const page = await pdfDocument.getPage(pageNum);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item) => ("str" in item ? (item as { str: string }).str : ""))
-        .join(" ");
-      fullText += pageText + "\n";
-    }
+    // Require CJS export to avoid Turbopack ESM default export mismatch
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pdfParse = require("pdf-parse");
+    const data = await pdfParse(buffer);
+    const fullText = data.text || "";
 
     const extractionResult = parseSyllabusText(fullText);
 
     return NextResponse.json({
       success: true,
-      numPages: pdfDocument.numPages,
+      numPages: data.numpages,
       ...extractionResult,
     });
   } catch (error: unknown) {
