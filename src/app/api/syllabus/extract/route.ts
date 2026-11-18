@@ -13,17 +13,17 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Require CJS export to avoid Turbopack ESM default export mismatch
+    // Modern pdf-parse v2+ class API
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfParse = require("pdf-parse");
-    const data = await pdfParse(buffer);
-    const fullText = data.text || "";
+    const { PDFParse } = require("pdf-parse");
+    const parserInstance = new PDFParse({ data: buffer });
+    const textResult = await parserInstance.getText();
+    const fullText = (typeof textResult === "string" ? textResult : textResult?.text) || "";
 
     const extractionResult = parseSyllabusText(fullText);
 
     return NextResponse.json({
       success: true,
-      numPages: data.numpages,
       ...extractionResult,
     });
   } catch (error: unknown) {
