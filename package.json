@@ -21,7 +21,8 @@
     "react-dom": "19.3.0",
     "recharts": "^3.11.0",
     "tailwind-merge": "^3.7.0",
-    "tesseract.js": "^5.1.1"
+    "tesseract.js": "^5.1.1",
+    "unpdf": "^2.2.1"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "4.3.3",

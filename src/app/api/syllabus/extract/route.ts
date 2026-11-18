@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseSyllabusText } from "@/lib/syllabus/parser";
+import { extractText } from "unpdf";
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,19 +12,16 @@ export async function POST(req: NextRequest) {
     }
 
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
 
-    // Modern pdf-parse v2+ class API
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PDFParse } = require("pdf-parse");
-    const parserInstance = new PDFParse({ data: buffer });
-    const textResult = await parserInstance.getText();
-    const fullText = (typeof textResult === "string" ? textResult : textResult?.text) || "";
+    // unpdf extracts text in modern Next.js / Serverless environments without workers
+    const { text, totalPages } = await extractText(arrayBuffer, { mergePages: true });
+    const fullText = text || "";
 
     const extractionResult = parseSyllabusText(fullText);
 
     return NextResponse.json({
       success: true,
+      numPages: totalPages,
       ...extractionResult,
     });
   } catch (error: unknown) {
