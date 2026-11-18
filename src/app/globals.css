@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+:root {
+  --surface-canvas: #f8fafc;
+  --surface-card: #ffffff;
+  --surface-subtle: #f1f5f9;
+  --ink-primary: #0f172a;
+  --ink-secondary: #475569;
+  --ink-muted: #64748b;
+  --border-subtle: #e2e8f0;
+  --brand-navy: #0f2744;
+  --brand-navy-hover: #183a63;
+  --brand-navy-soft: #eef3f9;
+  --brand-teal: #0d9488;
+  --brand-teal-soft: #f0fdfa;
+}
+
+@theme inline {
+  --color-background: var(--surface-canvas);
+  --color-foreground: var(--ink-primary);
+  --color-navy: var(--brand-navy);
+  --color-navy-hover: var(--brand-navy-hover);
+  --color-navy-soft: var(--brand-navy-soft);
+  --color-teal: var(--brand-teal);
+  --color-teal-soft: var(--brand-teal-soft);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+html,
+body {
+  background-color: var(--surface-canvas);
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle custom scrollbars for a clean Notion/Linear feel */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
